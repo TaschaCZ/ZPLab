@@ -198,6 +198,15 @@ function headlessAction(
   return selfDeclared !== undefined || target !== wireJm ? 'regenerate' : 'replay';
 }
 
+/** ^RF field for the label's tag write, or null when the design writes nothing. */
+export function rfidWriteLine(label: Pick<LabelConfig, 'rfidWriteData' | 'rfidWriteBank'>): string | null {
+  const data = label.rfidWriteData;
+  if (!data) return null;
+  return label.rfidWriteBank === 'user'
+    ? `^RFW,H,0,${data.length / 2},3^FD${data}^FS`
+    : `^RFW,H^FD${data}^FS`;
+}
+
 /** Each page becomes its own ^XA..^XZ block (separate labels to the printer).
  *  A page imported with a source-patch overlay replays its original bytes
  *  verbatim except for edited/added/removed objects; everything else
@@ -1192,6 +1201,12 @@ function generateZplBlock(
     bodyIdByLine.set(lines.length, b.objectId);
     lines.push(b.text);
   }
+
+  // ^RF: the tag write is a field of its own, after the printed fields. The EPC
+  // bank takes the ^RF defaults (m=E, 96-bit EPC from word 2); user memory
+  // names bank 3, start block 0 and the byte count.
+  const rfidWrite = rfidWriteLine(label);
+  if (rfidWrite) lines.push(rfidWrite);
 
   // ^PQ q,p,r,o (defaults q=1 p=0 r=0 o=N); emit if q>1 or any extended set.
   const pq = label.printQuantity ?? 1;

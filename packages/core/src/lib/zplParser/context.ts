@@ -243,6 +243,8 @@ export interface FieldState {
   // Type discriminator + pending ^FD payload
   fieldType: string | null;
   pendingFD: string | null;
+  /** ^RF write target, set with fieldType 'rfidWrite' and read at flush. */
+  rfidBank: "epc" | "user" | null;
   /** First truncating ^FH escape in the pending data, judged at flush. */
   pendingHexControl: SpannedToken | null;
   /** The opener token's span, null until ^FO/^FT; content since it is what a missing ^FS loses. */
@@ -722,6 +724,7 @@ export function freshFieldState(): FieldState {
     justify: "L",
     fieldType: null,
     pendingFD: null,
+    rfidBank: null,
     pendingHexControl: null,
     openedAt: null,
     objBase: 0,

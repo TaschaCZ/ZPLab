@@ -143,6 +143,24 @@ export function createLabelConfigHandlers(
       // The antenna slot is unmodelled, so any value in it is a loss.
       if (strParam(p[2]) !== "") notePartial(s.result, "^RW");
     },
+    // ^RFo,f,b,n,m: only the writes the design models open an RFID field, a
+    // hex write to the 96-bit EPC (the defaults) or to user memory from block 0.
+    // Every other form still owns its ^FD, so it opens an ignored field rather
+    // than letting the data fall through to a printed text.
+    RF(p) {
+      const op = strParam(p[0]).toUpperCase() || "W";
+      const fmt = strParam(p[1]).toUpperCase() || "H";
+      const start = strParam(p[2]);
+      const bank = strParam(p[4]).toUpperCase();
+      let target: "epc" | "user" | null = null;
+      if (op === "W" && fmt === "H") {
+        if ((bank === "" || bank === "E") && start === "" && strParam(p[3]) === "") target = "epc";
+        else if (bank === "3" && (start === "" || start === "0")) target = "user";
+      }
+      s.field.fieldType = target ? "rfidWrite" : "rfidIgnored";
+      s.field.rfidBank = target;
+      if (!target) notePartial(s.result, "^RF");
+    },
     MM(_, rest) {
       const mode = firstChar(rest);
       if (isMediaMode(mode)) labelConfig.mediaMode = mode;

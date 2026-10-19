@@ -60,7 +60,7 @@ import { notePartial,
 } from "./context";
 
 import { newId } from "../ids";
-import { PARKED_FIELD_MIN_DOTS } from "../../types/LabelConfig";
+import { PARKED_FIELD_MIN_DOTS, RFID_WRITE_DATA_RE } from "../../types/LabelConfig";
 
 /** Resolved at ^FS, where the ^BY module is final. The h-less form sizes the
  *  WHOLE symbol, so its row count is a content-dependent approximation. */
@@ -284,6 +284,23 @@ export function createCloseField(
     // Only text can pair with a stashed reverse-bg; non-text flushes first.
     if (s.field.fieldType !== "text") commitPendingReverseBg();
     switch (s.field.fieldType) {
+      // ^RF fields write the tag, they print nothing: the data lands in the
+      // label config, and a write the design cannot model was reported at ^RF.
+      case "rfidWrite": {
+        const hex = content.toUpperCase();
+        if (RFID_WRITE_DATA_RE.test(hex)) {
+          s.result.labelConfig.rfidWriteData = hex;
+          if (s.field.rfidBank === "user") s.result.labelConfig.rfidWriteBank = "user";
+          else delete s.result.labelConfig.rfidWriteBank;
+        } else {
+          notePartial(s.result, "^RF");
+        }
+        s.field.rfidBank = null;
+        break;
+      }
+      case "rfidIgnored":
+        s.field.rfidBank = null;
+        break;
       case "text": {
         // FT pins the last baseline, so the EM-top sits one block-extent above,
         // FO R/I stack the same way. Must match the generator's blockExtentFor

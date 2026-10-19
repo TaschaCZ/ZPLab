@@ -139,6 +139,13 @@ export const isRfidErrorHandling = makeEnumGuard(RFID_ERROR_HANDLING_VALUES);
 /** ^RS p: absolute dots from the label top, or F/B + mm off the leading
  *  edge (F0-F999, B0-B30, spec p.435); kept in its wire form. */
 export const RFID_POSITION_RE = /^(?:\d{1,5}|F\d{1,3}|B(?:\d|[12]\d|30))$/;
+/** ^RF write data: whole bytes of uppercase hex, up to 512 bytes of user memory. */
+export const RFID_WRITE_DATA_RE = /^(?:[0-9A-F]{2}){1,512}$/;
+/** ^RF m: EPC bank (96-bit EPC, PC bits kept) or user memory (bank 3). */
+export const RFID_WRITE_BANKS = ['epc', 'user'] as const;
+export type RfidWriteBank = (typeof RFID_WRITE_BANKS)[number];
+/** Hex digits an EPC-bank write takes: the 96-bit EPC the ^RF default (m=E) writes. */
+export const RFID_EPC96_HEX_LENGTH = 24;
 export const RFID_EPC_PARTITION_RANGE = { min: 1, max: 64 } as const;
 export const RFID_EPC_MAX_PARTITIONS = 16;
 /** ^RB n: spec-unbounded ("bit size of the tag"); sane 16-bit cap. The
@@ -318,6 +325,10 @@ export const labelConfigSchema = z.object({
   rfidReadPower: rfidPowerSchema.optional(),
   /** ^RW w: write power. */
   rfidWritePower: rfidPowerSchema.optional(),
+  /** ^RFW,H ^FD: hex data written to the tag of every printed label. */
+  rfidWriteData: z.string().regex(RFID_WRITE_DATA_RE).optional(),
+  /** ^RF m: target memory bank, EPC (96-bit) or user memory. */
+  rfidWriteBank: z.enum(RFID_WRITE_BANKS).optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;
@@ -442,6 +453,9 @@ export const LABEL_CONFIG_FIELDS = {
   rfidEpcPartitions: { scope: 'perLabel', emits: true, scales: 'never' },
   rfidReadPower: { scope: 'perLabel', emits: true, scales: 'never' },
   rfidWritePower: { scope: 'perLabel', emits: true, scales: 'never' },
+  // The data is the label's own (each label writes its tag), so it is per format.
+  rfidWriteData: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidWriteBank: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
 } as const satisfies { [K in keyof LabelConfig]-?: SpecFor<K> };
 
 const FIELD_ENTRIES = Object.entries(LABEL_CONFIG_FIELDS) as [
