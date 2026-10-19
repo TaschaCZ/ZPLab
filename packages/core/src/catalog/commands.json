@@ -6585,8 +6585,8 @@
         "example": "^RFW,H,0,4^FD1A2B3C4D^FS"
       },
       "support": {
-        "web": "planned",
-        "desktop": "planned"
+        "web": "yes",
+        "desktop": "yes"
       }
     },
     {

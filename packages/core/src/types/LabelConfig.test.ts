@@ -30,7 +30,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
         'mapClear', 'slewDotRows', 'slewToHome', 'programmablePause',
         'rfidTagType', 'rfidPosition', 'rfidVoidLength', 'rfidRetries',
         'rfidErrorHandling', 'rfidVoidSpeed', 'rfidEpcBits', 'rfidEpcPartitions',
-        'rfidReadPower', 'rfidWritePower',
+        'rfidReadPower', 'rfidWritePower', 'rfidWriteData', 'rfidWriteBank',
       ]),
     );
   });
@@ -40,6 +40,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
       sorted([
         'printQuantity', 'pauseCount', 'replicates', 'overridePauseCount',
         'slewDotRows', 'slewToHome', 'programmablePause', 'mapClear', 'jmDensity',
+        'rfidWriteData', 'rfidWriteBank',
       ]),
     );
   });

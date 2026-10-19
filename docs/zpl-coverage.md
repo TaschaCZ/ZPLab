@@ -298,7 +298,7 @@ password-coupled ^RL. Read-back stays native. ^RM/^RR folded into ^RS,
 
 | Command | Name | Web | Desktop | Docker |
 |---|---|:-:|:-:|:-:|
-| `^RF` | read / write RFID | `[~]` | `[~]` | `[~]` |
+| `^RF` | read / write RFID | `[x]` | `[x]` | `[x]` |
 | `^RI` | get tag ID | `[ ]` | `[~]` | `[~]` |
 | `^RM` | enable motion, pre-Link-OS, folded into ^RS | `[ ]` | `[ ]` | `[ ]` |
 | `^RN` | detect multiple tags, pre-Link-OS, absent from guide | `[ ]` | `[ ]` | `[ ]` |

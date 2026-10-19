@@ -45,6 +45,7 @@ import {
   type RfidPositionMode,
 } from "@zplab/core/lib/rfidPosition";
 import { RegionFocus } from "./printerIllustration";
+import { RfidWriteSection } from "./RfidWriteSection";
 
 type LocRfid = ReturnType<typeof useT>["printerSettings"]["rfid"];
 
@@ -245,6 +246,8 @@ export function RfidTab() {
       </RegionFocus>
 
       </section>
+
+      <RfidWriteSection />
 
       <RegionFocus region="antenna" className="border-t border-border pt-4">
         <ZplField>
