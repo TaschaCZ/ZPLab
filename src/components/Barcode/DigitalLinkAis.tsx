@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { useT } from "../../hooks/useT";
-import { usePreviewBinding } from "../../store/usePreviewBinding";
+import { usePreviewBinding, variablesWithActiveRow } from "../../store/usePreviewBinding";
 import { aiSpec } from "@zplab/core/lib/gs1";
 import { LINK_GTIN_LENGTHS, digitalLinkAddIssue, linkAis, linkAisSegments, linkGtin, linkSegmentIssue } from "@zplab/core/lib/gs1DigitalLink";
 import { addBlockText, linkIssueText } from "./gs1Text";
@@ -15,8 +15,9 @@ const rowHint: RowHint = (seg, resolved, err) =>
 /** The AI editor of a Digital Link, kept in sync with the form's `ais` element string. */
 export function DigitalLinkAis({ ais, onChange, feedback }: { ais: string; onChange: (ais: string) => void; feedback: ReactNode }) {
   const t = useT();
-  const { variables, resolveDefaults } = usePreviewBinding();
-  const draft = useGs1SegmentDraft(linkAisSegments(ais), false, resolveDefaults, linkSegmentIssue);
+  const { variables: storeVariables, active, resolveActive } = usePreviewBinding();
+  const variables = variablesWithActiveRow(storeVariables, active);
+  const draft = useGs1SegmentDraft(linkAisSegments(ais), false, resolveActive, linkSegmentIssue);
   const addBlock: AddBlock = (ai, present) => {
     const issue = digitalLinkAddIssue(ai, present);
     return addBlockText(t.gs1builder, ai, present) ?? (issue && linkIssueText(t.contentBuilder, issue));

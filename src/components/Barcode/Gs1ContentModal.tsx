@@ -4,9 +4,9 @@ import { DialogHeader } from "../ui/DialogHeader";
 import { DialogActions } from "../ui/DialogActions";
 import { useT } from "../../hooks/useT";
 import { useLabelStore, getCurrentObjects } from "../../store/labelStore";
-import { usePreviewBinding } from "../../store/usePreviewBinding";
+import { usePreviewBinding, variablesWithActiveRow } from "../../store/usePreviewBinding";
 import { getObjectStringContent } from "@zplab/core/lib/variableBinding";
-import { markersToEmbeds } from "@zplab/core/lib/fnTemplate";
+import { extractTemplateRefs, markersToEmbeds } from "@zplab/core/lib/fnTemplate";
 import { DEFAULT_CLOCK_CHARS, markersToTokens } from "@zplab/core/lib/fcTemplate";
 import { findObjectById } from "@zplab/core/types/Group";
 import { segmentsToElementString, segmentsToContent, parseGs1ToSegments } from "@zplab/core/lib/gs1";
@@ -31,7 +31,10 @@ function Gs1Builder({ objectId }: { objectId: string }) {
   const closeGs1Builder = useLabelStore((s) => s.closeGs1Builder);
   const updateObject = useLabelStore((s) => s.updateObject);
 
-  const { variables, resolveDefaults } = usePreviewBinding();
+  // Loaded data counts: a variable bound to the active row validates against
+  // that cell, so fixed-width AIs (GTIN, SSCC) pass without a hand-typed default.
+  const { variables: storeVariables, active, resolveActive } = usePreviewBinding();
+  const variables = variablesWithActiveRow(storeVariables, active);
   // Seed once (lazy): existing content the parser can't load (free text, a
   // lone single-bind marker, or a marker whose default no longer fills its
   // fixed AI) starts the editor empty WITH a warning instead of blocking the
@@ -43,7 +46,7 @@ function Gs1Builder({ objectId }: { objectId: string }) {
     return { segments: parsed ?? [], lost: content !== "" && parsed === null, enforceReq: GS1_REQ_ENFORCED_TYPES.has(obj?.type ?? "") };
   });
   // The rule set is frozen with the seed, so a target removed under the modal cannot relax the gates.
-  const draft = useGs1SegmentDraft(seed.segments, seed.enforceReq, resolveDefaults);
+  const draft = useGs1SegmentDraft(seed.segments, seed.enforceReq, resolveActive);
   const { segments, fieldErrorCount, setError } = draft;
 
   const fieldsOk = segments.length > 0 && fieldErrorCount === 0;
@@ -63,8 +66,22 @@ function Gs1Builder({ objectId }: { objectId: string }) {
     : !roundTrips ? tg.gateRoundTrip
     : null;
 
+  const updateVariable = useLabelStore((s) => s.updateVariable);
   const apply = () => {
-    updateObject(objectId, { props: { content: segmentsToContent(segments) } });
+    const content = segmentsToContent(segments);
+    // The ZPL emitter splits a GS1 template by the variables' DEFAULT widths;
+    // when those no longer fit, adopt the active row's values (what the
+    // builder validated) so export matches the preview.
+    if (parseGs1ToSegments(content, storeVariables) === null) {
+      const refs = new Set(extractTemplateRefs(content));
+      for (const v of variables) {
+        const before = storeVariables.find((sv) => sv.id === v.id);
+        if (before && refs.has(v.name) && before.defaultValue !== v.defaultValue) {
+          updateVariable(v.id, { defaultValue: v.defaultValue });
+        }
+      }
+    }
+    updateObject(objectId, { props: { content } });
     closeGs1Builder();
   };
 
@@ -114,7 +131,7 @@ function Gs1Builder({ objectId }: { objectId: string }) {
                   <span className="text-[10px] text-muted">{tg.elementSublabel}</span>
                 </span>
                 <code className="text-xs font-mono text-text break-all bg-surface-2 rounded px-2 py-1.5">
-                  {resolveDefaults(segmentsToElementString(segments), { resolveCtrl: false })}
+                  {resolveActive(segmentsToElementString(segments), { resolveCtrl: false })}
                 </code>
               </div>
               <div className="flex flex-col gap-1">

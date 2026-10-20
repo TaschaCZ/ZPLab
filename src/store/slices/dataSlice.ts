@@ -159,16 +159,19 @@ export const createDataSlice: StateCreator<LabelState, [], [], DataSlice> = (set
         return name === v.name ? v : { ...v, name };
       });
       if (!validateVariablesUnique(trimmed)) return {};
-      const variables =
-        trimmed.length === state.variables.length &&
-        trimmed.every((v, i) => v === state.variables[i])
-          ? state.variables
-          : trimmed;
       const rows = dataset.rows;
       const clampedIdx =
         rows.length === 0
           ? 0
           : Math.max(0, Math.min(activeRowIndex, rows.length - 1));
+      // An empty default would leave fixed-width consumers (GS1 AIs, the ZPL
+      // template split) with a zero-width sample; seed it from the active row.
+      const seeded = fillEmptyDefaultsFromRow(trimmed, dataset.headers, rows[clampedIdx], mapping);
+      const variables =
+        seeded.length === state.variables.length &&
+        seeded.every((v, i) => v === state.variables[i])
+          ? state.variables
+          : seeded;
       // Renaming an existing variable here must ripple to its `«name»` markers,
       // else bound fields orphan and print the marker literally. Diff by id.
       const oldNameById = new Map(state.variables.map((v) => [v.id, v.name]));
@@ -225,3 +228,22 @@ export const createDataSlice: StateCreator<LabelState, [], [], DataSlice> = (set
     }));
   },
 });
+
+/** Variables with an empty default take their bound cell from `row` (when that
+ *  cell is non-empty). Identity-preserving per variable. */
+export function fillEmptyDefaultsFromRow<V extends { id: string; defaultValue: string }>(
+  variables: readonly V[],
+  headers: readonly string[],
+  row: readonly string[] | undefined,
+  mapping: { bindings: Record<string, string> } | null,
+): V[] {
+  if (!row || !mapping) return [...variables];
+  return variables.map((v) => {
+    if (v.defaultValue !== "") return v;
+    const header = mapping.bindings[v.id];
+    if (header === undefined) return v;
+    const idx = headers.indexOf(header);
+    const cell = idx === -1 ? "" : (row[idx] ?? "");
+    return cell === "" ? v : { ...v, defaultValue: cell };
+  });
+}
