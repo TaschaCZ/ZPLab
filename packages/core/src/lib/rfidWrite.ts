@@ -1,0 +1,65 @@
+/** The tag write a label carries: the fixed rfidWriteData, or an EPC computed
+ *  from the label's variables (each printed row substitutes its own values
+ *  into the variables, so the tag always matches the printed fields). */
+import type { LabelConfig } from "../types/LabelConfig";
+import type { Variable } from "../types/Variable";
+import { encodeSgtin96, encodeSscc96, type EpcError } from "./epcEncode";
+
+export type RfidWriteLabel = Pick<
+  LabelConfig,
+  | "rfidWriteData"
+  | "rfidWriteBank"
+  | "rfidWriteFrom"
+  | "rfidKeyVariable"
+  | "rfidSerialVariable"
+  | "rfidEpcFilter"
+  | "rfidEpcPrefixDigits"
+  | "rfidWritePc"
+>;
+
+export const RFID_DEFAULT_PREFIX_DIGITS = 7;
+export const rfidDefaultFilter = (from: "sgtin96" | "sscc96"): number => (from === "sgtin96" ? 1 : 6);
+
+export type RfidWriteResult =
+  | { ok: true; hex: string }
+  | { ok: false; error: EpcError | "keyVariable" | "serialVariable" }
+  | null;
+
+/** Hex the tag receives, an error naming why the EPC can't be built, or null
+ *  when the design writes nothing. */
+export function resolveRfidWrite(label: RfidWriteLabel, variables: readonly Variable[]): RfidWriteResult {
+  const from = label.rfidWriteFrom;
+  if (!from) return label.rfidWriteData ? { ok: true, hex: label.rfidWriteData } : null;
+  const byId = (id: string | undefined) => (id === undefined ? undefined : variables.find((v) => v.id === id));
+  const key = byId(label.rfidKeyVariable);
+  if (!key) return { ok: false, error: "keyVariable" };
+  const filter = label.rfidEpcFilter ?? rfidDefaultFilter(from);
+  const digits = label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS;
+  const keyValue = key.defaultValue.trim();
+  if (from === "sscc96") return encodeSscc96(keyValue, filter, digits);
+  const serial = byId(label.rfidSerialVariable);
+  if (!serial) return { ok: false, error: "serialVariable" };
+  return encodeSgtin96(keyValue, serial.defaultValue.trim(), filter, digits);
+}
+
+/** PC word for an EPC of `hexLength` digits: length in 16-bit words in bits
+ *  15..11, UMI/XI/NSI left 0 (Gen2 §6.3.2.1.2.2). */
+export function pcWordFor(hexLength: number): string {
+  return ((hexLength / 4) << 11).toString(16).toUpperCase().padStart(4, "0");
+}
+
+/** ^RF field for the label's tag write, or null when it writes nothing (or the
+ *  EPC can't be computed from the current values). */
+export function rfidWriteCommand(label: RfidWriteLabel, variables: readonly Variable[] = []): string | null {
+  const result = resolveRfidWrite(label, variables);
+  if (!result || !result.ok) return null;
+  const data = result.hex;
+  if (label.rfidWriteBank === "user" && !label.rfidWriteFrom) {
+    return `^RFW,H,0,${data.length / 2},3^FD${data}^FS`;
+  }
+  if (label.rfidWritePc) {
+    // Word 1 of the EPC bank is the PC: write it and the EPC in one go.
+    return `^RFW,H,1,${data.length / 2 + 2},1^FD${pcWordFor(data.length)}${data}^FS`;
+  }
+  return `^RFW,H^FD${data}^FS`;
+}

@@ -4,8 +4,12 @@ import { useLabelStore } from "../../store/labelStore";
 import {
   RFID_EPC96_HEX_LENGTH,
   RFID_WRITE_DATA_RE,
+  RFID_WRITE_FROM,
   type RfidWriteBank,
+  type RfidWriteFrom,
 } from "@zplab/core/types/LabelConfig";
+import { RFID_DEFAULT_PREFIX_DIGITS, resolveRfidWrite, rfidDefaultFilter } from "@zplab/core/lib/rfidWrite";
+import { usePreviewBinding, variablesWithActiveRow } from "../../store/usePreviewBinding";
 import {
   COMPANY_PREFIX_DIGITS,
   FILTER_RANGE,
@@ -18,6 +22,8 @@ import {
 import {
   BoundedIntControl,
   SafeStringInput,
+  ZplCheckbox,
+  ZplEnumCustomSelect,
   ZplCommandLabel,
   ZplEnumSegmented,
   ZplField,
@@ -96,10 +102,9 @@ export function RfidWriteSection() {
     setLabelConfig({ rfidWriteData: result.hex, rfidWriteBank: undefined });
   };
 
-  return (
-    <section className="flex flex-col gap-4 border-t border-border pt-4">
-      <h3 className={sectionHeadingCls}>{loc.writeHeading}</h3>
-      <p className="text-xs text-muted">{loc.writeHint}</p>
+  const from = label.rfidWriteFrom;
+  const fixedBody = (
+    <>
 
       <RegionFocus region="antenna">
         <ZplEnumSegmented<RfidWriteBank>
@@ -125,7 +130,7 @@ export function RfidWriteSection() {
             value={typed}
             sanitize={hexOnly}
             onChange={commitData}
-            placeholder={bank === "epc" ? "30360C0C6C1D6140000186A1" : "32363130"}
+            placeholder={`${loc.examplePrefix} ${bank === "epc" ? "30360C0C6C1D6140000186A1" : "32363130"}`}
             aria-invalid={typedInvalid}
             spellCheck={false}
           />
@@ -172,15 +177,15 @@ export function RfidWriteSection() {
                 id={id}
                 value={key}
                 sanitize={digitsOnly}
-                onChange={setKey}
-                placeholder={scheme === "sgtin96" ? "08586011300855" : "385860112610000423"}
+                onChange={(v) => { setKey(v); setBuilderError(null); }}
+                placeholder={`${loc.examplePrefix} ${scheme === "sgtin96" ? "08586011300855" : "385860112610000423"}`}
               />
             )}
           </ZplSubField>
           {scheme === "sgtin96" ? (
             <ZplSubField label={loc.builderSerial} className={fieldGridCell}>
               {(id) => (
-                <SafeStringInput id={id} value={serial} sanitize={digitsOnly} onChange={setSerial} placeholder="100001" />
+                <SafeStringInput id={id} value={serial} sanitize={digitsOnly} onChange={(v) => { setSerial(v); setBuilderError(null); }} placeholder={`${loc.examplePrefix} 100001`} />
               )}
             </ZplSubField>
           ) : (
@@ -220,6 +225,127 @@ export function RfidWriteSection() {
           </ZplFieldHint>
         )}
       </ZplField>
+    </>
+  );
+
+  return (
+    <section className="flex flex-col gap-4 border-t border-border pt-4">
+      <h3 className={sectionHeadingCls}>{loc.writeHeading}</h3>
+      <p className="text-xs text-muted">{loc.writeHint}</p>
+
+      <ZplEnumSegmented<RfidWriteFrom>
+        label={loc.sourceLabel}
+        command="^RF"
+        values={RFID_WRITE_FROM}
+        value={from}
+        defaultLabel={loc.sourceFixed}
+        optionLabel={(v) => (v === "sgtin96" ? loc.sourceSgtin : loc.sourceSscc)}
+        onChange={(next) =>
+          setLabelConfig({
+            rfidWriteFrom: next,
+            // A computed EPC always targets the EPC bank, and the filter
+            // default differs per scheme (1 = POS item, 6 = unit load).
+            ...(next ? { rfidWriteBank: undefined, rfidEpcFilter: undefined } : {}),
+          })
+        }
+      />
+
+      {from ? <RfidFromData from={from} /> : fixedBody}
+
+      {(from || bank === "epc") && (
+        <ZplCheckbox
+          text={loc.writePc}
+          command="^RF"
+          checked={label.rfidWritePc === true}
+          onChange={(v) => setLabelConfig({ rfidWritePc: v || undefined })}
+          hint={loc.writePcHint}
+        />
+      )}
     </section>
+  );
+}
+
+const RESOLVE_ERROR_KEYS = {
+  ...ERROR_KEYS,
+  keyVariable: "errKeyVariable",
+  serialVariable: "errSerialVariable",
+} as const satisfies Record<string, keyof LocRfid>;
+
+/** Variable pickers for a per-row EPC, with the EPC the current row writes. */
+function RfidFromData({ from }: { from: RfidWriteFrom }) {
+  const t = useT();
+  const loc = t.printerSettings.rfid;
+  const label = useLabelStore((s) => s.label);
+  const setLabelConfig = useLabelStore((s) => s.setLabelConfig);
+  const { variables, active } = usePreviewBinding();
+  const ids = variables.map((v) => v.id);
+  const nameOf = (id: string) => variables.find((v) => v.id === id)?.name ?? id;
+  const result = resolveRfidWrite(label, variablesWithActiveRow(variables, active));
+  const decoded = result?.ok ? decodeEpc96(result.hex) : null;
+
+  return (
+    <>
+      <p className="text-xs text-muted">{loc.fromDataHint}</p>
+      <ZplEnumCustomSelect<string>
+        label={from === "sgtin96" ? loc.keyVariableGtin : loc.keyVariableSscc}
+        command="^FN"
+        values={ids}
+        value={label.rfidKeyVariable}
+        defaultLabel={loc.pickVariable}
+        optionLabel={nameOf}
+        optionBadge={() => ""}
+        onChange={(rfidKeyVariable) => setLabelConfig({ rfidKeyVariable })}
+      />
+      {from === "sgtin96" && (
+        <ZplEnumCustomSelect<string>
+          label={loc.serialVariable}
+          command="^FN"
+          values={ids}
+          value={label.rfidSerialVariable}
+          defaultLabel={loc.pickVariable}
+          optionLabel={nameOf}
+          optionBadge={() => ""}
+          onChange={(rfidSerialVariable) => setLabelConfig({ rfidSerialVariable })}
+        />
+      )}
+      <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+        <ZplSubField label={loc.builderFilter} className={fieldGridCell}>
+          {(id) => (
+            <BoundedIntControl
+              id={id}
+              min={FILTER_RANGE.min}
+              max={FILTER_RANGE.max}
+              value={label.rfidEpcFilter ?? rfidDefaultFilter(from)}
+              onChange={(rfidEpcFilter) => setLabelConfig({ rfidEpcFilter })}
+            />
+          )}
+        </ZplSubField>
+        <ZplSubField label={loc.builderPrefix} className={fieldGridCell}>
+          {(id) => (
+            <BoundedIntControl
+              id={id}
+              min={COMPANY_PREFIX_DIGITS.min}
+              max={COMPANY_PREFIX_DIGITS.max}
+              value={label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS}
+              onChange={(rfidEpcPrefixDigits) => setLabelConfig({ rfidEpcPrefixDigits })}
+            />
+          )}
+        </ZplSubField>
+      </div>
+      <ZplFieldHint>{loc.builderFilterHint}</ZplFieldHint>
+      <ZplField>
+        <span className={labelCls}>{loc.fromDataPreview}</span>
+        {result?.ok ? (
+          <div className="rounded border border-border bg-surface-2 px-2 py-1.5 font-mono text-[10px] leading-relaxed text-muted">
+            <div className="text-text">{result.hex}</div>
+            {decoded && <div>{decoded.uri}</div>}
+          </div>
+        ) : result ? (
+          <ZplFieldHint>
+            <span className="text-error">{loc[RESOLVE_ERROR_KEYS[result.error]]}</span>
+          </ZplFieldHint>
+        ) : null}
+      </ZplField>
+    </>
   );
 }

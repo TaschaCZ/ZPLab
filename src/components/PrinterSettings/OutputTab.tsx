@@ -128,6 +128,13 @@ export function OutputTab() {
           hint={t.label.overridePauseCountHint}
         />
       </RegionFocus>
+      <ZplCheckbox
+        text={t.label.expandRows}
+        command="^XF"
+        checked={label.batchExpandRows === true}
+        onChange={(v) => setLabelConfig({ batchExpandRows: v || undefined })}
+        hint={t.label.expandRowsHint}
+      />
     </div>
   );
 }

@@ -7,7 +7,15 @@ import { useLabelStore } from "../../store/labelStore";
 afterEach(() => {
   cleanup();
   act(() => {
-    useLabelStore.getState().setLabelConfig({ rfidWriteData: undefined, rfidWriteBank: undefined });
+    useLabelStore.getState().setLabelConfig({
+      rfidWriteData: undefined,
+      rfidWriteBank: undefined,
+      rfidWriteFrom: undefined,
+      rfidKeyVariable: undefined,
+      rfidSerialVariable: undefined,
+      rfidWritePc: undefined,
+    });
+    useLabelStore.getState().setVariables([]);
   });
 });
 
@@ -35,7 +43,7 @@ describe("RfidWriteSection", () => {
 
   it("keeps a typed EPC that is not 24 hex digits out of the design", () => {
     const { getByPlaceholderText, getByText } = render(<RfidWriteSection />);
-    fireEvent.change(getByPlaceholderText("30360C0C6C1D6140000186A1"), { target: { value: "3036" } });
+    fireEvent.change(getByPlaceholderText("e.g. 30360C0C6C1D6140000186A1"), { target: { value: "3036" } });
     expect(useLabelStore.getState().label.rfidWriteData).toBeUndefined();
     expect(getByText("The EPC needs exactly 24 hex digits.")).toBeTruthy();
   });
@@ -43,7 +51,25 @@ describe("RfidWriteSection", () => {
   it("accepts any whole bytes in user memory", () => {
     act(() => useLabelStore.getState().setLabelConfig({ rfidWriteBank: "user" }));
     const { getByPlaceholderText } = render(<RfidWriteSection />);
-    fireEvent.change(getByPlaceholderText("32363130"), { target: { value: "32363130" } });
+    fireEvent.change(getByPlaceholderText("e.g. 32363130"), { target: { value: "32363130" } });
     expect(useLabelStore.getState().label.rfidWriteData).toBe("32363130");
+  });
+
+  it("computes the EPC from the chosen variables and shows what the current row writes", () => {
+    act(() => {
+      useLabelStore.getState().setVariables([
+        { id: "g", name: "GTIN_cislo", fnNumber: 7, defaultValue: "08581001010011" },
+        { id: "s", name: "Seriove", fnNumber: 9, defaultValue: "100001" },
+      ]);
+    });
+    const { getByRole, getByText } = render(<RfidWriteSection />);
+    fireEvent.click(getByRole("button", { name: "From data: SGTIN-96" }));
+    expect(useLabelStore.getState().label.rfidWriteFrom).toBe("sgtin96");
+    expect(getByText("Choose the variable with the key.")).toBeTruthy();
+    act(() => {
+      useLabelStore.getState().setLabelConfig({ rfidKeyVariable: "g", rfidSerialVariable: "s" });
+    });
+    expect(getByText("30360BBE2400FA40000186A1")).toBeTruthy();
+    expect(getByText("urn:epc:id:sgtin:8581001.001001.100001")).toBeTruthy();
   });
 });

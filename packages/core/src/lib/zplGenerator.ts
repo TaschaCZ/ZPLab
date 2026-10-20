@@ -1,4 +1,5 @@
 import { mmToDots } from './coordinates';
+import { rfidWriteCommand, type RfidWriteLabel } from './rfidWrite';
 import { CONTROL_BYTES_RE } from './binaryText';
 import { unsafeRawFieldSpans } from './zplParser/helpers';
 import { rewriteRawFieldSpans } from './zplParser/decoders/gfa';
@@ -199,12 +200,8 @@ function headlessAction(
 }
 
 /** ^RF field for the label's tag write, or null when the design writes nothing. */
-export function rfidWriteLine(label: Pick<LabelConfig, 'rfidWriteData' | 'rfidWriteBank'>): string | null {
-  const data = label.rfidWriteData;
-  if (!data) return null;
-  return label.rfidWriteBank === 'user'
-    ? `^RFW,H,0,${data.length / 2},3^FD${data}^FS`
-    : `^RFW,H^FD${data}^FS`;
+export function rfidWriteLine(label: RfidWriteLabel, variables: readonly Variable[] = []): string | null {
+  return rfidWriteCommand(label, variables);
 }
 
 /** Each page becomes its own ^XA..^XZ block (separate labels to the printer).
@@ -1205,7 +1202,7 @@ function generateZplBlock(
   // ^RF: the tag write is a field of its own, after the printed fields. The EPC
   // bank takes the ^RF defaults (m=E, 96-bit EPC from word 2); user memory
   // names bank 3, start block 0 and the byte count.
-  const rfidWrite = rfidWriteLine(label);
+  const rfidWrite = rfidWriteLine(label, variables);
   if (rfidWrite) lines.push(rfidWrite);
 
   // ^PQ q,p,r,o (defaults q=1 p=0 r=0 o=N); emit if q>1 or any extended set.

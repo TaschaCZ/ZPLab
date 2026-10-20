@@ -146,6 +146,13 @@ export const RFID_WRITE_BANKS = ['epc', 'user'] as const;
 export type RfidWriteBank = (typeof RFID_WRITE_BANKS)[number];
 /** Hex digits an EPC-bank write takes: the 96-bit EPC the ^RF default (m=E) writes. */
 export const RFID_EPC96_HEX_LENGTH = 24;
+/** Where the tag write gets its EPC from: computed per printed row from the
+ *  bound variables (SGTIN-96 from GTIN + serial, SSCC-96 from the SSCC). */
+export const RFID_WRITE_FROM = ['sgtin96', 'sscc96'] as const;
+export type RfidWriteFrom = (typeof RFID_WRITE_FROM)[number];
+/** EPC filter value and GS1 company-prefix digits the computed EPC takes. */
+export const RFID_EPC_FILTER_RANGE = { min: 0, max: 7 } as const;
+export const RFID_EPC_PREFIX_DIGITS_RANGE = { min: 6, max: 12 } as const;
 export const RFID_EPC_PARTITION_RANGE = { min: 1, max: 64 } as const;
 export const RFID_EPC_MAX_PARTITIONS = 16;
 /** ^RB n: spec-unbounded ("bit size of the tag"); sane 16-bit cap. The
@@ -329,6 +336,20 @@ export const labelConfigSchema = z.object({
   rfidWriteData: z.string().regex(RFID_WRITE_DATA_RE).optional(),
   /** ^RF m: target memory bank, EPC (96-bit) or user memory. */
   rfidWriteBank: z.enum(RFID_WRITE_BANKS).optional(),
+  /** Compute the EPC from variables instead of the fixed rfidWriteData. */
+  rfidWriteFrom: z.enum(RFID_WRITE_FROM).optional(),
+  /** Variable id holding the GTIN (sgtin96) or the SSCC (sscc96). */
+  rfidKeyVariable: z.string().min(1).optional(),
+  /** Variable id holding the SGTIN serial. */
+  rfidSerialVariable: z.string().min(1).optional(),
+  rfidEpcFilter: intInRange(RFID_EPC_FILTER_RANGE).optional(),
+  rfidEpcPrefixDigits: intInRange(RFID_EPC_PREFIX_DIGITS_RANGE).optional(),
+  /** Also write the PC word so the tag reports the written EPC length (tags
+   *  sold with a longer EPC keep their old length on older firmware otherwise). */
+  rfidWritePc: z.boolean().optional(),
+  /** Data printing sends one complete label per row instead of a stored
+   *  format plus ^XF recalls (printers without ^FE field embedding). */
+  batchExpandRows: z.boolean().optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;
@@ -456,6 +477,14 @@ export const LABEL_CONFIG_FIELDS = {
   // The data is the label's own (each label writes its tag), so it is per format.
   rfidWriteData: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   rfidWriteBank: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidWriteFrom: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidKeyVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidSerialVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidEpcFilter: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidEpcPrefixDigits: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidWritePc: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  // Changes how a data job is shaped, not the bytes of the design's own label.
+  batchExpandRows: { scope: 'design', emits: false, scales: 'never' },
 } as const satisfies { [K in keyof LabelConfig]-?: SpecFor<K> };
 
 const FIELD_ENTRIES = Object.entries(LABEL_CONFIG_FIELDS) as [

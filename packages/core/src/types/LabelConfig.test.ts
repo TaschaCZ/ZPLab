@@ -31,6 +31,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
         'rfidTagType', 'rfidPosition', 'rfidVoidLength', 'rfidRetries',
         'rfidErrorHandling', 'rfidVoidSpeed', 'rfidEpcBits', 'rfidEpcPartitions',
         'rfidReadPower', 'rfidWritePower', 'rfidWriteData', 'rfidWriteBank',
+        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidEpcPrefixDigits', 'rfidWritePc',
       ]),
     );
   });
@@ -41,12 +42,13 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
         'printQuantity', 'pauseCount', 'replicates', 'overridePauseCount',
         'slewDotRows', 'slewToHome', 'programmablePause', 'mapClear', 'jmDensity',
         'rfidWriteData', 'rfidWriteBank',
+        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidEpcPrefixDigits', 'rfidWritePc',
       ]),
     );
   });
 
   it('derives NON_EMITTING_CONFIG_FIELDS', () => {
-    expect(sorted(NON_EMITTING_CONFIG_FIELDS)).toEqual(['safeAreaMm']);
+    expect(sorted(NON_EMITTING_CONFIG_FIELDS)).toEqual(sorted(['safeAreaMm', 'batchExpandRows']));
   });
 
   it('derives the scaled field sets', () => {

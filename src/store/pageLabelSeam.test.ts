@@ -18,6 +18,8 @@ const MINT = /\bdesignAsPageLabel\(|\bas PageLabel\b/;
 const GENERATE_ZPL_CALLERS = [
   "packages/core/src/lib/zplGenerator.ts",
   "src/lib/printPreview.ts",
+  // Per-row expanded batch: same flat, page-resolved emit as the preview.
+  "src/lib/sendZpl.ts",
 ];
 const GENERATE_ZPL_CALL = /\bgenerateZPL\(/;
 
