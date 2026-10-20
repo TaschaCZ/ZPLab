@@ -1663,6 +1663,8 @@ const da = {
     csvWillBeCreated: 'oprettes',
     csvDuplicateColumn: 'Også knyttet til en anden variabel',
     csvRemoveDraftAria: 'Fjern fra kladde',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Ingen variabler defineret endnu. Tilføj en nedenfor eller i panelet Variabler.',
     csvActiveRowLabel: 'Forhåndsvisningsrække',
     csvActiveRowOf: 'af',

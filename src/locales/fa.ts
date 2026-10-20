@@ -1663,6 +1663,8 @@ const fa = {
     csvWillBeCreated: 'ایجاد خواهد شد',
     csvDuplicateColumn: 'همچنین به متغیر دیگری متصل است',
     csvRemoveDraftAria: 'حذف از پیش‌نویس',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'هنوز هیچ متغیری تعریف نشده است. در پایین یا در پنل متغیرها اضافه کنید.',
     csvActiveRowLabel: 'ردیف پیش‌نمایش',
     csvActiveRowOf: 'از',

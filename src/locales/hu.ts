@@ -1663,6 +1663,8 @@ const hu = {
     csvWillBeCreated: 'létrejön',
     csvDuplicateColumn: 'Egy másik változóhoz is hozzárendelve',
     csvRemoveDraftAria: 'Eldobás a piszkozatból',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Még nincs változó megadva. Adj hozzá egyet alább vagy a Változók panelen.',
     csvActiveRowLabel: 'Előnézeti sor',
     csvActiveRowOf: '/',

@@ -1663,6 +1663,8 @@ const no = {
     csvWillBeCreated: 'opprettes',
     csvDuplicateColumn: 'Også knyttet til en annen variabel',
     csvRemoveDraftAria: 'Fjern fra utkast',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Ingen variabler definert ennå. Legg til en nedenfor eller i Variabler-panelet.',
     csvActiveRowLabel: 'Forhåndsvisningsrad',
     csvActiveRowOf: 'av',

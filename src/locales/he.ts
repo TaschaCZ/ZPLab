@@ -1663,6 +1663,8 @@ const he = {
     csvWillBeCreated: 'ייווצר',
     csvDuplicateColumn: 'מקושר גם למשתנה אחר',
     csvRemoveDraftAria: 'הסר מהטיוטה',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'עדיין לא הוגדרו משתנים. הוסף אחד למטה או בלוח המשתנים.',
     csvActiveRowLabel: 'שורת תצוגה מקדימה',
     csvActiveRowOf: 'מתוך',

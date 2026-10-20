@@ -1663,6 +1663,8 @@ const bg = {
     csvWillBeCreated: 'ще бъде създадена',
     csvDuplicateColumn: 'Свързано и с друга променлива',
     csvRemoveDraftAria: 'Премахни от чернова',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Все още няма дефинирани променливи. Добавете една по-долу или в панела Променливи.',
     csvActiveRowLabel: 'Ред за преглед',
     csvActiveRowOf: 'от',

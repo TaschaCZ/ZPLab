@@ -1663,6 +1663,8 @@ const ko = {
     csvWillBeCreated: '생성됩니다',
     csvDuplicateColumn: '다른 변수에도 바인딩됨',
     csvRemoveDraftAria: '초안에서 제거',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: '아직 정의된 변수가 없습니다. 아래나 변수 패널에서 추가하세요.',
     csvActiveRowLabel: '미리보기 행',
     csvActiveRowOf: '/',

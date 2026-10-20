@@ -1663,6 +1663,8 @@ const lv = {
     csvWillBeCreated: 'tiks izveidots',
     csvDuplicateColumn: 'Saistīts arī ar citu mainīgo',
     csvRemoveDraftAria: 'Noņemt no melnraksta',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Mainīgie vēl nav definēti. Pievienojiet zemāk vai mainīgo panelī.',
     csvActiveRowLabel: 'Priekšskatījuma rinda',
     csvActiveRowOf: 'no',

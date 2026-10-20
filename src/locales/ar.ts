@@ -1663,6 +1663,8 @@ const ar = {
     csvWillBeCreated: 'سيتم إنشاؤه',
     csvDuplicateColumn: 'مرتبط أيضًا بمتغير آخر',
     csvRemoveDraftAria: 'إزالة من المسودة',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'لم يتم تعريف متغيرات بعد. أضف واحدًا أدناه أو في لوحة المتغيرات.',
     csvActiveRowLabel: 'صف المعاينة',
     csvActiveRowOf: 'من',

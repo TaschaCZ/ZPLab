@@ -1663,6 +1663,8 @@ const ro = {
     csvWillBeCreated: 'va fi creată',
     csvDuplicateColumn: 'De asemenea, asociată cu altă variabilă',
     csvRemoveDraftAria: 'Elimină din schiță',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Nu există încă variabile definite. Adaugă una mai jos sau în panoul Variabile.',
     csvActiveRowLabel: 'Rând previzualizare',
     csvActiveRowOf: 'din',

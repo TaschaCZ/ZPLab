@@ -1663,6 +1663,8 @@ const et = {
     csvWillBeCreated: 'luuakse',
     csvDuplicateColumn: 'Seotud ka teise muutujaga',
     csvRemoveDraftAria: 'Eemalda mustandist',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Muutujaid pole veel määratletud. Lisa allpool või Muutujate paneelis.',
     csvActiveRowLabel: 'Eelvaate rida',
     csvActiveRowOf: '/',

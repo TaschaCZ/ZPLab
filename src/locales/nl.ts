@@ -1663,6 +1663,8 @@ const nl = {
     csvWillBeCreated: 'wordt aangemaakt',
     csvDuplicateColumn: 'Ook gekoppeld aan een andere variabele',
     csvRemoveDraftAria: 'Uit concept verwijderen',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Nog geen variabelen gedefinieerd. Voeg er een toe hieronder of in het paneel Variabelen.',
     csvActiveRowLabel: 'Voorbeeldrij',
     csvActiveRowOf: 'van',

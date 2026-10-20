@@ -1663,6 +1663,8 @@ const zhHant = {
     csvWillBeCreated: '將建立',
     csvDuplicateColumn: '也綁定到另一個變數',
     csvRemoveDraftAria: '從草稿中移除',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: '尚未定義變數。請在下方或變數面板中新增。',
     csvActiveRowLabel: '預覽列',
     csvActiveRowOf: '/',

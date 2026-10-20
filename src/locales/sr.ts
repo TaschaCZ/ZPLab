@@ -1663,6 +1663,8 @@ const sr = {
     csvWillBeCreated: 'биће креирано',
     csvDuplicateColumn: 'Такође повезано са другом променљивом',
     csvRemoveDraftAria: 'Уклони из нацрта',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Још нема дефинисаних променљивих. Додај једну испод или у панелу Променљиве.',
     csvActiveRowLabel: 'Ред прегледа',
     csvActiveRowOf: 'од',

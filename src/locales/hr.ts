@@ -1663,6 +1663,8 @@ const hr = {
     csvWillBeCreated: 'bit će kreirano',
     csvDuplicateColumn: 'Također povezano s drugom varijablom',
     csvRemoveDraftAria: 'Ukloni iz skice',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Još nema definiranih varijabli. Dodaj jednu ispod ili u ploči Varijable.',
     csvActiveRowLabel: 'Redak pregleda',
     csvActiveRowOf: 'od',

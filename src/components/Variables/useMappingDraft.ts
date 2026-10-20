@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLabelStore } from '../../store/labelStore';
 import { useT } from '../../hooks/useT';
 import {
@@ -50,6 +50,11 @@ export interface MappingDraft {
   changeBinding: (variableId: string, value: string) => void;
   removeDraftVariable: (id: string) => void;
   addVariable: () => void;
+  /** One new variable per column not bound yet, named after the column and
+   *  bound to it; the names stay editable and unwanted rows removable. */
+  addVariablesFromColumns: () => void;
+  /** Columns that addVariablesFromColumns would still create a variable for. */
+  unboundColumnCount: number;
   canApply: boolean;
   /** Commit the whole bundle atomically; caller decides what to do next. */
   apply: () => void;
@@ -228,6 +233,32 @@ export function useMappingDraft(): MappingDraft {
     });
   };
 
+  const addVariablesFromColumns = () => {
+    const sample = virtualRows[draftRow] ?? virtualRows[0];
+    const created = variablesFromColumns(draftVariables, virtualHeaders, draftBindings, sample);
+    if (created.length === 0) return;
+    setDraftVariables((prev) => [...prev, ...created.map((c) => c.variable)]);
+    setDraftBindings((prev) => {
+      const next = { ...prev };
+      for (const c of created) next[c.variable.id] = c.header;
+      return next;
+    });
+  };
+
+  // A first mapping (no variables yet) starts with one variable per column, so
+  // the columns are usable by name right away; everything stays editable.
+  const autoFilled = useRef(false);
+  useEffect(() => {
+    if (autoFilled.current) return;
+    if (initialVariableIds.size > 0 || virtualHeaders.length === 0) return;
+    autoFilled.current = true;
+    addVariablesFromColumns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot seed on first headers
+  }, [virtualHeaders, initialVariableIds]);
+
+  const boundHeaderSet = new Set(Object.values(draftBindings));
+  const unboundColumnCount = virtualHeaders.filter((h) => h.trim() !== '' && !boundHeaderSet.has(h)).length;
+
   const apply = () => {
     // dbExcelParseOptions keeps the carried options safe for re-import.
     if (!dataset) return;
@@ -279,6 +310,8 @@ export function useMappingDraft(): MappingDraft {
     changeBinding,
     removeDraftVariable,
     addVariable,
+    addVariablesFromColumns,
+    unboundColumnCount,
     canApply,
     apply,
   };
@@ -315,4 +348,34 @@ function persistableParseOptions(d: DraftOptions): CsvParseOptionsPersisted | un
   if (d.skipRows > 0) opts.skipRows = d.skipRows;
   if (d.encoding !== 'utf-8') opts.encoding = d.encoding;
   return Object.keys(opts).length === 0 ? undefined : opts;
+}
+
+/** Draft variables for every column no variable binds yet: the column name
+ *  (made valid and unique) as the name, the sample row's cell as the default. */
+export function variablesFromColumns(
+  existing: readonly Variable[],
+  headers: readonly string[],
+  bindings: Record<string, string>,
+  sampleRow: readonly string[] | undefined,
+): { variable: Variable; header: string }[] {
+  const bound = new Set(Object.values(bindings));
+  const taken = new Set(existing.map((v) => v.name.trim()));
+  const fns = existing.map((v) => v.fnNumber);
+  const out: { variable: Variable; header: string }[] = [];
+  headers.forEach((header, idx) => {
+    if (header.trim() === '' || bound.has(header)) return;
+    const fn = nextFreeFnNumber(fns);
+    if (fn === null) return;
+    let base = header.replace(/[«»\n]/g, ' ').trim();
+    if (!isValidVariableName(base)) base = `col_${idx + 1}`;
+    let name = base;
+    for (let n = 2; taken.has(name); n++) name = `${base}_${n}`;
+    taken.add(name);
+    fns.push(fn);
+    out.push({
+      variable: { id: newId(), name, fnNumber: fn, defaultValue: sampleRow?.[idx] ?? '' },
+      header,
+    });
+  });
+  return out;
 }

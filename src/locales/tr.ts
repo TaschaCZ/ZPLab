@@ -1663,6 +1663,8 @@ const tr = {
     csvWillBeCreated: 'oluşturulacak',
     csvDuplicateColumn: 'Başka bir değişkene de bağlı',
     csvRemoveDraftAria: 'Taslaktan çıkar',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Henüz değişken tanımlanmadı. Aşağıdan veya Değişkenler panelinden ekleyin.',
     csvActiveRowLabel: 'Önizleme satırı',
     csvActiveRowOf: '/',

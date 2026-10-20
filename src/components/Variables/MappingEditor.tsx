@@ -23,6 +23,8 @@ export function MappingEditor({ draft }: { draft: MappingDraft }) {
     showMismatchWarning,
     parseError,
     addVariable,
+    addVariablesFromColumns,
+    unboundColumnCount,
   } = draft;
 
   return (
@@ -60,7 +62,7 @@ export function MappingEditor({ draft }: { draft: MappingDraft }) {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-border/50 px-3 py-2 flex flex-col gap-2">
+        <div className="border-t border-border/50 px-3 py-2 flex flex-wrap gap-2">
           <button
             onClick={addVariable}
             disabled={allSlotsTaken}
@@ -69,6 +71,17 @@ export function MappingEditor({ draft }: { draft: MappingDraft }) {
             <PlusIcon className="w-3.5 h-3.5" />
             {tv.add}
           </button>
+          {unboundColumnCount > 0 && (
+            <button
+              onClick={addVariablesFromColumns}
+              disabled={allSlotsTaken}
+              title={tv.fromColumnsHint}
+              className="self-start flex items-center gap-1.5 px-2 py-1 rounded text-xs font-mono border border-dashed border-border text-muted hover:text-text hover:border-border-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <PlusIcon className="w-3.5 h-3.5" />
+              {tv.fromColumnsFmt.replace('{n}', String(unboundColumnCount))}
+            </button>
+          )}
         </div>
       </div>
 

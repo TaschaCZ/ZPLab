@@ -1663,6 +1663,8 @@ const cs = {
     csvWillBeCreated: 'bude vytvořena',
     csvDuplicateColumn: 'Také vázáno na jinou proměnnou',
     csvRemoveDraftAria: 'Vyřadit z konceptu',
+    fromColumnsFmt: 'Proměnné ze sloupců ({n})',
+    fromColumnsHint: 'Pro každý sloupec, který ještě nemá proměnnou, vytvoří proměnnou se stejným názvem a naváže ji. Před Použít můžete název přepsat nebo řádek odebrat.',
     csvNoVariables: 'Zatím nejsou definovány žádné proměnné. Přidejte ji níže nebo v panelu Proměnné.',
     csvActiveRowLabel: 'Řádek náhledu',
     csvActiveRowOf: 'z',

@@ -1663,6 +1663,8 @@ const fi = {
     csvWillBeCreated: 'luodaan',
     csvDuplicateColumn: 'Myös toiseen muuttujaan sidottu',
     csvRemoveDraftAria: 'Hylkää luonnoksesta',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Muuttujia ei ole vielä määritetty. Lisää alla tai Muuttujat-paneelissa.',
     csvActiveRowLabel: 'Esikatselurivi',
     csvActiveRowOf: '/',

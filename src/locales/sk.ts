@@ -1663,6 +1663,8 @@ const sk = {
     csvWillBeCreated: 'bude vytvorená',
     csvDuplicateColumn: 'Tiež viazané na inú premennú',
     csvRemoveDraftAria: 'Vyradiť z konceptu',
+    fromColumnsFmt: 'Premenné zo stĺpcov ({n})',
+    fromColumnsHint: 'Pre každý stĺpec, ktorý ešte nemá premennú, vytvorí premennú s rovnakým názvom a naviaže ju. Pred Použiť môžete názov prepísať alebo riadok odobrať.',
     csvNoVariables: 'Zatiaľ nie sú definované žiadne premenné. Pridajte nižšie alebo v paneli Premenné.',
     csvActiveRowLabel: 'Riadok náhľadu',
     csvActiveRowOf: 'z',

@@ -1663,6 +1663,8 @@ const ja = {
     csvWillBeCreated: '作成されます',
     csvDuplicateColumn: '別の変数にもバインドされています',
     csvRemoveDraftAria: '下書きから削除',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'まだ変数が定義されていません。下または変数パネルから追加してください。',
     csvActiveRowLabel: 'プレビュー行',
     csvActiveRowOf: '/',

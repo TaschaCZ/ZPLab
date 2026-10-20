@@ -1663,6 +1663,8 @@ const es = {
     csvWillBeCreated: 'se creará',
     csvDuplicateColumn: 'También vinculada a otra variable',
     csvRemoveDraftAria: 'Descartar del borrador',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Aún no hay variables definidas. Añade una abajo o en el panel de Variables.',
     csvActiveRowLabel: 'Fila de vista previa',
     csvActiveRowOf: 'de',

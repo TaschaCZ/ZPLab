@@ -1663,6 +1663,8 @@ const sl = {
     csvWillBeCreated: 'bo ustvarjena',
     csvDuplicateColumn: 'Povezano tudi z drugo spremenljivko',
     csvRemoveDraftAria: 'Odstrani iz osnutka',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Spremenljivke še niso določene. Dodaj jo spodaj ali v plošči Spremenljivke.',
     csvActiveRowLabel: 'Vrstica predogleda',
     csvActiveRowOf: 'od',

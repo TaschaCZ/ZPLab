@@ -1663,6 +1663,8 @@ const el = {
     csvWillBeCreated: 'θα δημιουργηθεί',
     csvDuplicateColumn: 'Συνδέεται επίσης με άλλη μεταβλητή',
     csvRemoveDraftAria: 'Απόρριψη από το προσχέδιο',
+    fromColumnsFmt: 'Variables from columns ({n})',
+    fromColumnsHint: 'Creates a variable named after each column that has none yet and binds it. Rename or remove any row before Apply.',
     csvNoVariables: 'Δεν έχουν οριστεί ακόμη μεταβλητές. Πρόσθεσε μία παρακάτω ή στον πίνακα Μεταβλητές.',
     csvActiveRowLabel: 'Σειρά προεπισκόπησης',
     csvActiveRowOf: 'από',
