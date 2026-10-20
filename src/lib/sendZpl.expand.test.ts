@@ -3,7 +3,7 @@ import type { LabelObject } from "@zplab/core/types/Group";
 import type { PageLabel } from "@zplab/core/types/LabelConfig";
 import type { Variable } from "@zplab/core/types/Variable";
 import { generateBatchZpl, generateZPL } from "@zplab/core/lib/zplGenerator";
-import { expandsRows, flattenPages, generateExpandedBatchZpl } from "./sendZpl";
+import { documentZpl, expandsRows, flattenPages, generateExpandedBatchZpl } from "./sendZpl";
 import { generateMultiPageZPL } from "@zplab/core/lib/zplGenerator";
 
 const LABEL = { widthMm: 100, heightMm: 200, dpmm: 8 } as PageLabel;
@@ -103,5 +103,14 @@ describe("generateExpandedBatchZpl", () => {
     const zpl = generateMultiPageZPL(LABEL, pages, withDefaults);
     expect(zpl).not.toContain("^FE");
     expect(zpl).toContain("^FD(01)08581001010011(21)100001^FS");
+  });
+
+  it("flattens the document export too once the tag is computed from data", () => {
+    const withDefaults = vars.map((v) => ({ ...v, defaultValue: v.id === "g" ? "08581001010011" : "100001" }));
+    const label = { ...LABEL, rfidWriteFrom: "sgtin96", rfidKeyVariable: "g", rfidSerialVariable: "s", rfidWritePc: true } as PageLabel;
+    const zpl = documentZpl({ label, pages: [{ objects: [gs1] }], variables: withDefaults });
+    expect(zpl).not.toContain("^FE");
+    expect(zpl).toContain("^FD(01)08581001010011(21)100001^FS");
+    expect(zpl).toContain("^RFW,H,1,14,1^FD300030360BBE2400FA40000186A1^FS");
   });
 });

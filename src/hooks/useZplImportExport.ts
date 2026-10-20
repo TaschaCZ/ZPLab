@@ -5,8 +5,7 @@ import {
   selectCanBatchExport,
   useLabelStore,
 } from "../store/labelStore";
-import { generateMultiPageZPL } from "@zplab/core/lib/zplGenerator";
-import { sendZpl } from "../lib/sendZpl";
+import { documentZpl, sendZpl } from "../lib/sendZpl";
 import { generateSetupScript, setupFormatBlocks } from "../lib/zplSetupScript";
 import { printErrorMessage, printLabel, printReplaced } from "../lib/printSheet";
 import { saveTextFile, saveErrorMessage, ZPL_SAVE_FILTERS } from "../lib/fileDialogs";
@@ -37,7 +36,7 @@ export function useZplImportExport(canvasRef: RefObject<LabelCanvasHandle | null
 
   const handleDownload = () => {
     const s = useLabelStore.getState();
-    const zpl = finishZplExport(generateMultiPageZPL(s.label, s.pages, s.variables));
+    const zpl = finishZplExport(documentZpl(s));
     void saveTextFile(zpl, { filename: "label.zpl", filters: ZPL_SAVE_FILTERS })
       .then((wrote) => wrote && clearUserError())
       .catch(() => setUserError(saveErrorMessage));

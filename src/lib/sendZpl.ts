@@ -59,6 +59,14 @@ export function flattenPages(pages: readonly Page[], variables: readonly Variabl
   }));
 }
 
+/** The design's own emit (no data job). Expanding: the variables' defaults go
+ *  straight into the fields, so no ^FE embedding reaches a printer that can't
+ *  resolve it. Shared by the send and the "Export ZPL" download. */
+export function documentZpl(s: Pick<LabelState, "label" | "pages" | "variables">): string {
+  const pages = expandsRows(s.label) ? flattenPages(s.pages, s.variables, s.label) : s.pages;
+  return generateMultiPageZPL(s.label, pages, s.variables);
+}
+
 /** A data job expands per row when the design asks for it, or when the tag
  *  write is computed per row (a stored format cannot compute an EPC). */
 export function expandsRows(label: { batchExpandRows?: boolean; rfidWriteFrom?: string }): boolean {
@@ -70,12 +78,7 @@ export function expandsRows(label: { batchExpandRows?: boolean; rfidWriteFrom?: 
  *  `sampleRows` caps the recall blocks for a caller that reads the commands and not the data. */
 export function sendZpl(s: LabelState, sampleRows?: number): string {
   const batch = selectBatchInputs(s);
-  if (!batch) {
-    // Expanding without data: the variables' defaults go straight into the
-    // fields, so no ^FE embedding reaches a printer that can't resolve it.
-    const pages = s.label.batchExpandRows ? flattenPages(s.pages, s.variables, s.label) : s.pages;
-    return zplForExport(generateMultiPageZPL(s.label, pages, s.variables), selectKeepExportMetadata(s));
-  }
+  if (!batch) return zplForExport(documentZpl(s), selectKeepExportMetadata(s));
   const dataset =
     sampleRows === undefined ? batch.dataset : { ...batch.dataset, rows: batch.dataset.rows.slice(0, sampleRows) };
   const pageLabel = currentPageLabel(s);
