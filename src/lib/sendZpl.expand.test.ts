@@ -3,7 +3,7 @@ import type { LabelObject } from "@zplab/core/types/Group";
 import type { PageLabel } from "@zplab/core/types/LabelConfig";
 import type { Variable } from "@zplab/core/types/Variable";
 import { generateBatchZpl, generateZPL } from "@zplab/core/lib/zplGenerator";
-import { documentZpl, expandsRows, flattenPages, generateExpandedBatchZpl } from "./sendZpl";
+import { counterCopies, documentZpl, expandsRows, flattenPages, generateExpandedBatchZpl, stepCounterValue } from "./sendZpl";
 import { generateMultiPageZPL } from "@zplab/core/lib/zplGenerator";
 
 const LABEL = { widthMm: 100, heightMm: 200, dpmm: 8 } as PageLabel;
@@ -112,5 +112,42 @@ describe("generateExpandedBatchZpl", () => {
     expect(zpl).not.toContain("^FE");
     expect(zpl).toContain("^FD(01)08581001010011(21)100001^FS");
     expect(zpl).toContain("^RFW,H,1,14,1^FD300030360BBE2400FA40000186A1^FS");
+  });
+
+  it("prints a run of serials from one row, the RFID EPC stepping with the barcode", () => {
+    const label = {
+      ...LABEL,
+      counterVariable: "s",
+      counterCount: 5,
+      rfidWriteFrom: "sgtin96",
+      rfidKeyVariable: "g",
+      rfidSerialVariable: "s",
+    } as PageLabel;
+    const zpl = generateExpandedBatchZpl(label, [gs1], vars, { ...dataset, rows: [dataset.rows[0]!] }, mapping);
+    expect(zpl.match(/\^XA/g)).toHaveLength(5);
+    for (const n of ["100001", "100002", "100003", "100004", "100005"]) {
+      expect(zpl).toContain(`^FD(01)08581001010011(21)${n}^FS`);
+    }
+    const serials = [...zpl.matchAll(/\^RFW,H\^FD([0-9A-F]+)\^FS/g)].map((m) => parseInt(m[1]!.slice(-10), 16) & 0x3fffffffff);
+    expect(serials).toEqual([100001, 100002, 100003, 100004, 100005]);
+    expect(expandsRows({ counterVariable: "s", counterCount: 5 })).toBe(true);
+    expect(expandsRows({ counterVariable: "s", counterCount: 1 })).toBe(false);
+  });
+
+  it("counts from the defaults when printing without data", () => {
+    const withDefaults = vars.map((v) => ({ ...v, defaultValue: v.id === "g" ? "08581001010011" : "100001" }));
+    const label = { ...LABEL, counterVariable: "s", counterCount: 3, counterStep: 10 } as PageLabel;
+    const zpl = documentZpl({ label, pages: [{ objects: [gs1] }], variables: withDefaults });
+    expect(zpl).toContain("(21)100001^FS");
+    expect(zpl).toContain("(21)100011^FS");
+    expect(zpl).toContain("(21)100021^FS");
+  });
+
+  it("steps numbers keeping their width, and trailing digits of mixed values", () => {
+    expect(stepCounterValue("000123", 1)).toBe("000124");
+    expect(stepCounterValue("LOT-0099", 1)).toBe("LOT-0100");
+    expect(stepCounterValue("999", 1)).toBe("1000");
+    expect(stepCounterValue("ABC", 3)).toBe("ABC");
+    expect(counterCopies(vars, {})).toHaveLength(1);
   });
 });

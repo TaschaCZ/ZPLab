@@ -153,6 +153,8 @@ export type RfidWriteFrom = (typeof RFID_WRITE_FROM)[number];
 /** EPC filter value and GS1 company-prefix digits the computed EPC takes. */
 export const RFID_EPC_FILTER_RANGE = { min: 0, max: 7 } as const;
 export const RFID_EPC_PREFIX_DIGITS_RANGE = { min: 6, max: 12 } as const;
+export const COUNTER_COUNT_RANGE = { min: 1, max: 9999 } as const;
+export const COUNTER_STEP_RANGE = { min: 1, max: 1000 } as const;
 export const RFID_EPC_PARTITION_RANGE = { min: 1, max: 64 } as const;
 export const RFID_EPC_MAX_PARTITIONS = 16;
 /** ^RB n: spec-unbounded ("bit size of the tag"); sane 16-bit cap. The
@@ -355,6 +357,14 @@ export const labelConfigSchema = z.object({
   /** Data printing sends one complete label per row instead of a stored
    *  format plus ^XF recalls (printers without ^FE field embedding). */
   batchExpandRows: z.boolean().optional(),
+  /** Counter: variable id whose numeric value steps up on each copy, so one
+   *  data row prints a run of serials (100001..100005) everywhere it appears,
+   *  RFID EPC included. */
+  counterVariable: z.string().min(1).optional(),
+  /** Labels per data row the counter prints (1 = counter off). */
+  counterCount: intInRange(COUNTER_COUNT_RANGE).optional(),
+  /** Increment between consecutive labels. */
+  counterStep: intInRange(COUNTER_STEP_RANGE).optional(),
 });
 
 export type LabelConfig = z.infer<typeof labelConfigSchema>;
@@ -492,6 +502,9 @@ export const LABEL_CONFIG_FIELDS = {
   rfidWritePc: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   // Changes how a data job is shaped, not the bytes of the design's own label.
   batchExpandRows: { scope: 'design', emits: false, scales: 'never' },
+  counterVariable: { scope: 'design', emits: false, scales: 'never' },
+  counterCount: { scope: 'design', emits: false, scales: 'never' },
+  counterStep: { scope: 'design', emits: false, scales: 'never' },
 } as const satisfies { [K in keyof LabelConfig]-?: SpecFor<K> };
 
 const FIELD_ENTRIES = Object.entries(LABEL_CONFIG_FIELDS) as [

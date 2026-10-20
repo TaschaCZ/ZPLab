@@ -48,7 +48,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
   });
 
   it('derives NON_EMITTING_CONFIG_FIELDS', () => {
-    expect(sorted(NON_EMITTING_CONFIG_FIELDS)).toEqual(sorted(['safeAreaMm', 'batchExpandRows']));
+    expect(sorted(NON_EMITTING_CONFIG_FIELDS)).toEqual(sorted(['safeAreaMm', 'batchExpandRows', 'counterVariable', 'counterCount', 'counterStep']));
   });
 
   it('derives the scaled field sets', () => {

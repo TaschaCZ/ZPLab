@@ -208,7 +208,8 @@ export const selectCanBatchExport = (s: LabelState): boolean =>
  *  (printQuantity multiplies every recall). 0 when there is no batch. */
 export const selectBatchPrintCount = (s: LabelState): number => {
   const batch = selectBatchInputs(s);
-  return batch ? batch.dataset.rows.length * (s.label.printQuantity ?? 1) : 0;
+  const copies = s.label.counterVariable ? s.label.counterCount ?? 1 : 1;
+  return batch ? batch.dataset.rows.length * copies * (s.label.printQuantity ?? 1) : 0;
 };
 
 export const selectAppUpdateBusy = ({ appUpdate: { phase } }: LabelState) =>

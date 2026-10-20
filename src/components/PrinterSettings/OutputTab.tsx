@@ -5,8 +5,10 @@ import { UnitNumberInput } from "../Properties/UnitNumberInput";
 import { Tooltip } from "../ui/Tooltip";
 import { labelCls, fieldGridCols, fieldGridCell } from "../ui/formStyles";
 import { RegionFocus } from "./printerIllustration";
-import { ZplBoundedIntInput, ZplCheckbox } from "./zplFieldPrimitives";
-import { LABEL_HOME_RANGE, LABEL_SHIFT_RANGE, LABEL_TOP_RANGE } from "@zplab/core/types/LabelConfig";
+import { ZplBoundedIntInput, ZplCheckbox, ZplEnumCustomSelect, ZplFieldHint } from "./zplFieldPrimitives";
+import { usePreviewBinding, variablesWithActiveRow } from "../../store/usePreviewBinding";
+import { stepCounterValue } from "../../lib/sendZpl";
+import { COUNTER_COUNT_RANGE, COUNTER_STEP_RANGE, LABEL_HOME_RANGE, LABEL_SHIFT_RANGE, LABEL_TOP_RANGE } from "@zplab/core/types/LabelConfig";
 
 /** Print-time output settings (offsets, shift, quantities). These are
  *  per-label ZPL (^LH/^LT/^LS/^PQ) and stay in labelConfig; they live here
@@ -135,6 +137,62 @@ export function OutputTab() {
         onChange={(v) => setLabelConfig({ batchExpandRows: v || undefined })}
         hint={t.label.expandRowsHint}
       />
+      <CounterSection />
+    </div>
+  );
+}
+
+/** Counter: one data row (or the defaults) prints a run of labels with one
+ *  variable stepped per label, e.g. serials 100001..100005. */
+function CounterSection() {
+  const t = useT();
+  const label = useLabelStore((s) => s.label);
+  const setLabelConfig = useLabelStore((s) => s.setLabelConfig);
+  const { variables, active } = usePreviewBinding();
+  const count = label.counterCount ?? 1;
+  const step = label.counterStep ?? 1;
+  const current = variablesWithActiveRow(variables, active).find((v) => v.id === label.counterVariable)?.defaultValue;
+  return (
+    <div className="flex flex-col gap-2 border-t border-border pt-4">
+      <ZplEnumCustomSelect<string>
+        label={t.label.counterVariable}
+        command="^XA"
+        values={variables.map((v) => v.id)}
+        value={label.counterVariable}
+        defaultLabel={t.label.counterOff}
+        optionLabel={(id) => variables.find((v) => v.id === id)?.name ?? id}
+        optionBadge={() => ""}
+        onChange={(counterVariable) => setLabelConfig({ counterVariable })}
+      />
+      {label.counterVariable && (
+        <>
+          <ZplBoundedIntInput
+            label={t.label.counterCount}
+            command="^XA"
+            min={COUNTER_COUNT_RANGE.min}
+            max={COUNTER_COUNT_RANGE.max}
+            value={label.counterCount}
+            onChange={(counterCount) => setLabelConfig({ counterCount })}
+          />
+          <ZplBoundedIntInput
+            label={t.label.counterStep}
+            command="^XA"
+            min={COUNTER_STEP_RANGE.min}
+            max={COUNTER_STEP_RANGE.max}
+            value={label.counterStep}
+            onChange={(counterStep) => setLabelConfig({ counterStep })}
+          />
+          {current !== undefined && current !== "" && (
+            <ZplFieldHint>
+              {t.label.counterPreviewFmt
+                .replace("{n}", String(count))
+                .replace("{from}", current)
+                .replace("{to}", stepCounterValue(current, (count - 1) * step))}
+            </ZplFieldHint>
+          )}
+        </>
+      )}
+      <ZplFieldHint>{t.label.counterHint}</ZplFieldHint>
     </div>
   );
 }

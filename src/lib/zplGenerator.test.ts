@@ -17,8 +17,10 @@ const BASE_LABEL: LabelConfig = {
 describe('NON_EMITTING_CONFIG_KEYS tripwire', () => {
   // A config key wrongly listed as non-emitting would skip the overlay drop and
   // export stale config. Lock the membership and prove each member is invariant.
-  it('contains only safeAreaMm and batchExpandRows', () => {
-    expect([...NON_EMITTING_CONFIG_KEYS].sort()).toEqual(['batchExpandRows', 'safeAreaMm']);
+  it('contains only safeAreaMm and the data-job shaping keys', () => {
+    expect([...NON_EMITTING_CONFIG_KEYS].sort()).toEqual(
+      ['batchExpandRows', 'counterCount', 'counterStep', 'counterVariable', 'safeAreaMm'],
+    );
   });
 
   it('changing batchExpandRows does not change generated ZPL (it shapes the data job only)', () => {
