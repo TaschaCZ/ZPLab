@@ -14,6 +14,10 @@ afterEach(() => {
       rfidKeyVariable: undefined,
       rfidSerialVariable: undefined,
       rfidWritePc: undefined,
+      rfidFilterVariable: undefined,
+      rfidPrefixVariable: undefined,
+      rfidEpcFilter: undefined,
+      rfidEpcPrefixDigits: undefined,
     });
     useLabelStore.getState().setVariables([]);
   });
@@ -71,5 +75,6 @@ describe("RfidWriteSection", () => {
     });
     expect(getByText("30360BBE2400FA40000186A1")).toBeTruthy();
     expect(getByText("urn:epc:id:sgtin:8581001.001001.100001")).toBeTruthy();
+    expect(getByText(/^Partition 5/)).toBeTruthy();
   });
 });

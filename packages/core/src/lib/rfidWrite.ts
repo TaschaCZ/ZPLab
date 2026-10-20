@@ -13,6 +13,8 @@ export type RfidWriteLabel = Pick<
   | "rfidKeyVariable"
   | "rfidSerialVariable"
   | "rfidEpcFilter"
+  | "rfidFilterVariable"
+  | "rfidPrefixVariable"
   | "rfidEpcPrefixDigits"
   | "rfidWritePc"
 >;
@@ -22,7 +24,7 @@ export const rfidDefaultFilter = (from: "sgtin96" | "sscc96"): number => (from =
 
 export type RfidWriteResult =
   | { ok: true; hex: string }
-  | { ok: false; error: EpcError | "keyVariable" | "serialVariable" }
+  | { ok: false; error: EpcError | "keyVariable" | "serialVariable" | "prefixMismatch" }
   | null;
 
 /** Hex the tag receives, an error naming why the EPC can't be built, or null
@@ -33,9 +35,26 @@ export function resolveRfidWrite(label: RfidWriteLabel, variables: readonly Vari
   const byId = (id: string | undefined) => (id === undefined ? undefined : variables.find((v) => v.id === id));
   const key = byId(label.rfidKeyVariable);
   if (!key) return { ok: false, error: "keyVariable" };
-  const filter = label.rfidEpcFilter ?? rfidDefaultFilter(from);
-  const digits = label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS;
+  const filterVar = byId(label.rfidFilterVariable);
+  const filter = filterVar
+    ? /^\d+$/.test(filterVar.defaultValue.trim()) ? Number(filterVar.defaultValue.trim()) : NaN
+    : label.rfidEpcFilter ?? rfidDefaultFilter(from);
+  // The prefix column may hold the company prefix itself (6-12 digits: its
+  // length sets the partition) or the partition value (one digit, 0-6).
+  const prefixVar = byId(label.rfidPrefixVariable);
+  const prefixCell = prefixVar?.defaultValue.trim();
+  if (prefixCell !== undefined && !/^\d+$/.test(prefixCell)) return { ok: false, error: "prefixLength" };
+  const isPartition = prefixCell !== undefined && prefixCell.length === 1;
+  const prefix = isPartition ? undefined : prefixCell;
+  const digits = isPartition
+    ? 12 - Number(prefixCell)
+    : prefix !== undefined ? prefix.length : label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS;
   const keyValue = key.defaultValue.trim();
+  // The prefix follows the GTIN-14 indicator / SSCC extension digit.
+  const keyBody = from === "sgtin96" ? keyValue.padStart(14, "0") : keyValue;
+  if (prefix !== undefined && /^\d+$/.test(keyValue) && keyBody.slice(1, 1 + prefix.length) !== prefix) {
+    return { ok: false, error: "prefixMismatch" };
+  }
   if (from === "sscc96") return encodeSscc96(keyValue, filter, digits);
   const serial = byId(label.rfidSerialVariable);
   if (!serial) return { ok: false, error: "serialVariable" };
@@ -63,3 +82,6 @@ export function rfidWriteCommand(label: RfidWriteLabel, variables: readonly Vari
   }
   return `^RFW,H^FD${data}^FS`;
 }
+
+/** GS1 TDS partition value for a company prefix of `digits` digits (12 - digits). */
+export const partitionFor = (digits: number): number => 12 - digits;

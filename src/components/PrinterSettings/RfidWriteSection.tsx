@@ -8,7 +8,7 @@ import {
   type RfidWriteBank,
   type RfidWriteFrom,
 } from "@zplab/core/types/LabelConfig";
-import { RFID_DEFAULT_PREFIX_DIGITS, resolveRfidWrite, rfidDefaultFilter } from "@zplab/core/lib/rfidWrite";
+import { RFID_DEFAULT_PREFIX_DIGITS, partitionFor, resolveRfidWrite, rfidDefaultFilter } from "@zplab/core/lib/rfidWrite";
 import { usePreviewBinding, variablesWithActiveRow } from "../../store/usePreviewBinding";
 import {
   COMPANY_PREFIX_DIGITS,
@@ -33,6 +33,7 @@ import {
 import { builderButtonCls, fieldGridCell, fieldGridCols, labelCls, sectionHeadingCls } from "../ui/formStyles";
 import { RegionFocus } from "./printerIllustration";
 import { SegmentedControl } from "../ui/SegmentedControl";
+import { RfidEpcHelp } from "./RfidEpcHelp";
 
 type LocRfid = ReturnType<typeof useT>["printerSettings"]["rfid"];
 
@@ -214,8 +215,20 @@ export function RfidWriteSection() {
               />
             )}
           </ZplSubField>
+          <ZplSubField label={loc.helpColPartition} className={fieldGridCell}>
+            {(id) => (
+              <BoundedIntControl
+                id={id}
+                min={partitionFor(COMPANY_PREFIX_DIGITS.max)}
+                max={partitionFor(COMPANY_PREFIX_DIGITS.min)}
+                value={prefixDigits === undefined ? undefined : partitionFor(prefixDigits)}
+                onChange={(p) => setPrefixDigits(p === undefined ? undefined : partitionFor(p))}
+              />
+            )}
+          </ZplSubField>
         </div>
         <ZplFieldHint>{loc.builderFilterHint}</ZplFieldHint>
+        <RfidEpcHelp scheme={scheme} filter={filter} prefixDigits={prefixDigits} />
         <button type="button" onClick={build} className={builderButtonCls}>
           {loc.builderApply}
         </button>
@@ -269,6 +282,7 @@ const RESOLVE_ERROR_KEYS = {
   ...ERROR_KEYS,
   keyVariable: "errKeyVariable",
   serialVariable: "errSerialVariable",
+  prefixMismatch: "errPrefixMismatch",
 } as const satisfies Record<string, keyof LocRfid>;
 
 /** Variable pickers for a per-row EPC, with the EPC the current row writes. */
@@ -308,31 +322,73 @@ function RfidFromData({ from }: { from: RfidWriteFrom }) {
           onChange={(rfidSerialVariable) => setLabelConfig({ rfidSerialVariable })}
         />
       )}
-      <div className={`grid grid-cols-2 ${fieldGridCols}`}>
-        <ZplSubField label={loc.builderFilter} className={fieldGridCell}>
-          {(id) => (
-            <BoundedIntControl
-              id={id}
-              min={FILTER_RANGE.min}
-              max={FILTER_RANGE.max}
-              value={label.rfidEpcFilter ?? rfidDefaultFilter(from)}
-              onChange={(rfidEpcFilter) => setLabelConfig({ rfidEpcFilter })}
-            />
-          )}
-        </ZplSubField>
-        <ZplSubField label={loc.builderPrefix} className={fieldGridCell}>
-          {(id) => (
-            <BoundedIntControl
-              id={id}
-              min={COMPANY_PREFIX_DIGITS.min}
-              max={COMPANY_PREFIX_DIGITS.max}
-              value={label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS}
-              onChange={(rfidEpcPrefixDigits) => setLabelConfig({ rfidEpcPrefixDigits })}
-            />
-          )}
-        </ZplSubField>
-      </div>
+      <ZplEnumCustomSelect<string>
+        label={loc.builderFilter}
+        command="^FN"
+        values={ids}
+        value={label.rfidFilterVariable}
+        defaultLabel={loc.fixedValueOption}
+        optionLabel={nameOf}
+        optionBadge={() => ""}
+        onChange={(rfidFilterVariable) => setLabelConfig({ rfidFilterVariable })}
+      />
+      {!label.rfidFilterVariable && (
+        <BoundedIntControl
+          ariaLabel={loc.builderFilter}
+          min={FILTER_RANGE.min}
+          max={FILTER_RANGE.max}
+          value={label.rfidEpcFilter ?? rfidDefaultFilter(from)}
+          onChange={(rfidEpcFilter) => setLabelConfig({ rfidEpcFilter })}
+        />
+      )}
       <ZplFieldHint>{loc.builderFilterHint}</ZplFieldHint>
+      <ZplEnumCustomSelect<string>
+        label={loc.prefixVariable}
+        command="^FN"
+        values={ids}
+        value={label.rfidPrefixVariable}
+        defaultLabel={loc.prefixDigitsOption}
+        optionLabel={nameOf}
+        optionBadge={() => ""}
+        onChange={(rfidPrefixVariable) => setLabelConfig({ rfidPrefixVariable })}
+      />
+      {!label.rfidPrefixVariable && (
+        <div className={`grid grid-cols-2 ${fieldGridCols}`}>
+          <ZplSubField label={loc.builderPrefix} className={fieldGridCell}>
+            {(id) => (
+              <BoundedIntControl
+                id={id}
+                min={COMPANY_PREFIX_DIGITS.min}
+                max={COMPANY_PREFIX_DIGITS.max}
+                value={label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS}
+                onChange={(rfidEpcPrefixDigits) => setLabelConfig({ rfidEpcPrefixDigits })}
+              />
+            )}
+          </ZplSubField>
+          <ZplSubField label={loc.helpColPartition} className={fieldGridCell}>
+            {(id) => (
+              <BoundedIntControl
+                id={id}
+                min={partitionFor(COMPANY_PREFIX_DIGITS.max)}
+                max={partitionFor(COMPANY_PREFIX_DIGITS.min)}
+                value={partitionFor(label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS)}
+                onChange={(p) => setLabelConfig({ rfidEpcPrefixDigits: p === undefined ? undefined : partitionFor(p) })}
+              />
+            )}
+          </ZplSubField>
+        </div>
+      )}
+      <ZplFieldHint>
+        {loc.partitionFmt.replace(
+          "{p}",
+          decoded ? String(decoded.partition) : label.rfidPrefixVariable ? "?" : String(partitionFor(label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS)),
+        )}
+      </ZplFieldHint>
+      <RfidEpcHelp
+        scheme={from}
+        filter={decoded?.filter ?? (label.rfidFilterVariable ? undefined : label.rfidEpcFilter ?? rfidDefaultFilter(from))}
+        prefixDigits={decoded ? 12 - decoded.partition : label.rfidPrefixVariable ? undefined : label.rfidEpcPrefixDigits ?? RFID_DEFAULT_PREFIX_DIGITS}
+      />
       <ZplField>
         <span className={labelCls}>{loc.fromDataPreview}</span>
         {result?.ok ? (

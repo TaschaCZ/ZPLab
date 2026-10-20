@@ -31,7 +31,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
         'rfidTagType', 'rfidPosition', 'rfidVoidLength', 'rfidRetries',
         'rfidErrorHandling', 'rfidVoidSpeed', 'rfidEpcBits', 'rfidEpcPartitions',
         'rfidReadPower', 'rfidWritePower', 'rfidWriteData', 'rfidWriteBank',
-        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidEpcPrefixDigits', 'rfidWritePc',
+        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidFilterVariable', 'rfidPrefixVariable', 'rfidEpcPrefixDigits', 'rfidWritePc',
       ]),
     );
   });
@@ -42,7 +42,7 @@ describe('LABEL_CONFIG_FIELDS derivations', () => {
         'printQuantity', 'pauseCount', 'replicates', 'overridePauseCount',
         'slewDotRows', 'slewToHome', 'programmablePause', 'mapClear', 'jmDensity',
         'rfidWriteData', 'rfidWriteBank',
-        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidEpcPrefixDigits', 'rfidWritePc',
+        'rfidWriteFrom', 'rfidKeyVariable', 'rfidSerialVariable', 'rfidEpcFilter', 'rfidFilterVariable', 'rfidPrefixVariable', 'rfidEpcPrefixDigits', 'rfidWritePc',
       ]),
     );
   });

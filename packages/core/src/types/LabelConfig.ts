@@ -343,6 +343,11 @@ export const labelConfigSchema = z.object({
   /** Variable id holding the SGTIN serial. */
   rfidSerialVariable: z.string().min(1).optional(),
   rfidEpcFilter: intInRange(RFID_EPC_FILTER_RANGE).optional(),
+  /** Variable id whose value is the EPC filter (0-7); wins over rfidEpcFilter. */
+  rfidFilterVariable: z.string().min(1).optional(),
+  /** Variable id holding the GS1 company prefix itself; its length sets the
+   *  partition and wins over rfidEpcPrefixDigits. */
+  rfidPrefixVariable: z.string().min(1).optional(),
   rfidEpcPrefixDigits: intInRange(RFID_EPC_PREFIX_DIGITS_RANGE).optional(),
   /** Also write the PC word so the tag reports the written EPC length (tags
    *  sold with a longer EPC keep their old length on older firmware otherwise). */
@@ -481,6 +486,8 @@ export const LABEL_CONFIG_FIELDS = {
   rfidKeyVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   rfidSerialVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   rfidEpcFilter: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidFilterVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
+  rfidPrefixVariable: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   rfidEpcPrefixDigits: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   rfidWritePc: { scope: 'perLabel', emits: true, scales: 'never', perFormat: true },
   // Changes how a data job is shaped, not the bytes of the design's own label.
