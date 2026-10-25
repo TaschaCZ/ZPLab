@@ -1,0 +1,64 @@
+name: Build macOS (fork, unsigned)
+
+# Builds unsigned macOS .dmg installers (Apple Silicon and Intel) without the
+# upstream signing keys. Run it from the Actions tab ("Run workflow"); the .dmg
+# files land in the run's artifacts as ZPLab-macos-arm64 / ZPLab-macos-x64.
+# Unsigned: on first launch right-click the app and choose Open.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/rfid-write]
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            name: arm64
+          - target: x86_64-apple-darwin
+            name: x64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - run: pnpm install --frozen-lockfile
+
+      # The SEA sidecar clones a node binary; the Intel leg is cross-built on the
+      # arm64 runner and needs an x86_64 node of the exact same version.
+      - name: fetch x86_64 node for the SEA sidecar
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: |
+          V=$(node --version)
+          curl -fsSL "https://nodejs.org/dist/${V}/node-${V}-darwin-x64.tar.gz" | tar xz -C "$RUNNER_TEMP"
+          echo "ZPLAB_SEA_NODE=$RUNNER_TEMP/node-${V}-darwin-x64/bin/node" >> "$GITHUB_ENV"
+
+      # Updater artifacts need the upstream private key; a fork has none.
+      - name: build dmg
+        run: pnpm tauri build --target ${{ matrix.target }} --bundles dmg --config '{"bundle":{"createUpdaterArtifacts":false}}'
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ZPLab-macos-${{ matrix.name }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: error
